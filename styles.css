@@ -219,13 +219,13 @@
   @media (hover:hover){ .splash-enter:hover{transform:translateY(-2px);} }
 
   /* ---------- Glass card base ---------- */
-  .glass{
-    background:var(--glass-bg);
-    backdrop-filter:blur(20px) saturate(160%);
-    -webkit-backdrop-filter:blur(20px) saturate(160%);
-    border:1px solid var(--glass-border);
-    box-shadow:var(--shadow-neu), var(--shadow-float);
-  }
+.glass{
+  background:#F3F0E7; /* أو أبيض حسب التصميم */
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  border:none;
+  box-shadow:none;
+}
 
   /* ---------- Dashboard cards ---------- */
   .card-stack{display:flex; flex-direction:column; gap:16px; flex:1; justify-content:center;}
