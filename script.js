@@ -214,7 +214,8 @@ document.getElementById('orderForm').addEventListener('submit', function(e){
 `*📢 طلب جديد متاح | رقم #${orderNumber}*
 *🏪 نقطة الاستلام*: ${pickupName}
 *💵 مطلوب دفعه*: ${valueFormatted} د.أ
-*📝 ملاحظات*: ${notes}
+*📝 ملاحظات*:
+ ${notes}
 
 ———————————————
 *⚠️ تعليمات القبول:*
@@ -264,7 +265,7 @@ document.getElementById('confirmForm').addEventListener('submit', function(e){
 `📢 تنبيه: الكابتن في الطريق إليكم!
 
 تم إسناد الطلب للكابتن *${captainName}*
-الآن في طريقه لإستلام الطلب رقم *${fullOrderNumber}*
+وهو الآن في طريقه لإستلام الطلب رقم *${fullOrderNumber}*
 ⏰ وقت الوصول المتوقع: *${timeFormatted}*
 
 شكراً لكم على سرعة التجاوب واحترافيتكم العالية 🩵
