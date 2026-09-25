@@ -14,21 +14,21 @@ const ICONS = {
 };
 
 const RESTAURANTS = [
-  {name:"Bullgurz", icon:ICONS.burger},
-  {name:"شاورما الريف", icon:ICONS.wrap},
-  {name:"حلويات نفيسة", icon:ICONS.cake},
-  {name:"مطعم أبو أحمد النسور للمناسف", icon:ICONS.plate},
-  {name:"قهوة أبو صالح", icon:ICONS.coffee},
-  {name:"معجنات جلنار", icon:ICONS.pastry},
-  {name:"حماده", icon:ICONS.store},
-  {name:"معجنات الأمير", icon:ICONS.pastry},
-  {name:"سوبر ماركت زاد السلط", icon:ICONS.cart},
-  {name:"مكتبة شفا العامرية", icon:ICONS.book},
-  {name:"مطاعم الدمشقي", icon:ICONS.forkKnife},
-  {name:"النشاش ستورز", icon:ICONS.store},
-  {name:"Cheetah Pet Shop", icon:ICONS.paw},
-  {name:"مطعم الخليج", icon:ICONS.forkKnife},
-  {name:"مكتبة الياسر", icon:ICONS.book},
+  {name:"Bullgurz | السرو", icon:ICONS.burger},
+  {name:"شاورما الريف | السرو", icon:ICONS.wrap},
+  {name:"حلويات نفيسة | مجمع العوايشة", icon:ICONS.cake},
+  {name:"مطعم أبو أحمد النسور للمناسف | السرو", icon:ICONS.plate},
+  {name:"قهوة أبو صالح | السرو", icon:ICONS.coffee},
+  {name:"معجنات جلنار | السرو", icon:ICONS.pastry},
+  {name:"حماده | السرو", icon:ICONS.store},
+  {name:"معجنات الأمير | دبابنة", icon:ICONS.pastry},
+  {name:"سوبر سرايا السلط | دبابنة", icon:ICONS.cart},
+  {name:"مكتبة شفا العامرية| بجانب مبنى المحافظة", icon:ICONS.book},
+  {name:"مطاعم الدمشقي | وادي الشجرة", icon:ICONS.forkKnife},
+  {name:"النشاش ستورز | طلوع الخرابشة", icon:ICONS.store},
+  {name:"Cheetah Pet Shop | اسكان الجمارك", icon:ICONS.paw},
+  {name:"مطعم الخليج | السرو", icon:ICONS.forkKnife},
+  {name:"مكتبة الياسر | اسكان الجمارك", icon:ICONS.book},
 ].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 
 const SCREEN_META = {
