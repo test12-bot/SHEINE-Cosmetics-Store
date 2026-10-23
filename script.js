@@ -1,3 +1,7 @@
+/* =========================================================
+   HIGHWAY Delivery — لوحة تحكم المنسقين
+   ========================================================= */
+
 const ICONS = {
   burger:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5c0-3.6 3.6-6.5 8-6.5s8 2.9 8 6.5"/><path d="M3.5 10.5h17"/><path d="M4 14h16"/><path d="M4.5 17.5h15c.4 1.6-.9 3-2.6 3H7.1c-1.7 0-3-1.4-2.6-3Z"/></svg>`,
   wrap:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5 19 9l-3.3 10.5L4 15z"/><path d="M9 7.3l8.2 3M8 10.6l7.5 2.7M7 13.8l6.8 2.5"/></svg>`,
@@ -22,75 +26,312 @@ const RESTAURANTS = [
   {name:"معجنات جلنار", icon:ICONS.pastry},
   {name:"حماده", icon:ICONS.store},
   {name:"معجنات الأمير", icon:ICONS.pastry},
-  {name:"سوبر ماركت سرايا السلط", icon:ICONS.cart},
+  {name:"سوبر ماركت زاد السلط", icon:ICONS.cart},
   {name:"مكتبة شفا العامرية", icon:ICONS.book},
   {name:"مطاعم الدمشقي", icon:ICONS.forkKnife},
-  {name:"النشاش ستور", icon:ICONS.store},
+  {name:"النشاش ستورز", icon:ICONS.store},
   {name:"Cheetah Pet Shop", icon:ICONS.paw},
   {name:"مطعم الخليج", icon:ICONS.forkKnife},
   {name:"مكتبة الياسر", icon:ICONS.book},
 ].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 
+/* زر الرجوع، وعنوان الصفحة، والتبويب المضيء لكل شاشة */
 const SCREEN_META = {
-  'screen-dashboard':  { back:null },
-  'screen-restaurants':{ back:'screen-dashboard' },
-  'screen-order':      { back:'screen-restaurants' },
-  'screen-confirm':    { back:'screen-dashboard' },
-  'screen-success':    { back:null },
+  'screen-dashboard':  { back:null, title:'لوحة التحكم', tab:'screen-dashboard' },
+  'screen-orders':     { back:null, title:'الطلبات', tab:'screen-orders' },
+  'screen-restaurants':{ back:null, title:'تحضير طلب', tab:'screen-restaurants' },
+  'screen-order':      { back:'screen-restaurants', title:'تفاصيل الطلب', tab:'screen-restaurants' },
+  'screen-confirm':    { back:null, title:'تأكيد الاستلام', tab:'screen-confirm' },
+  'screen-success':    { back:null, title:'تمت العملية', tab:'screen-dashboard' },
+  'screen-captains':   { back:null, title:'الكباتن', tab:'screen-captains' },
 };
 
-let state = {
-  pickup:{ name:"", isCustom:false }
-};
+let state = { pickup:{ name:"", isCustom:false } };
+let currentScreen = 'screen-dashboard';
 
-const SPLASH_ICONS = [
-  ICONS.pin,
-  ICONS.coffee,
-  ICONS.cake,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="1.5"/><path d="M4 12.5h16"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>`,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 18l3-8h4l4 6h3"/><path d="M9 10 8 6H6"/></svg>`,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 6l1.2 12.3A1.5 1.5 0 0 0 6.7 19.5h10.6a1.5 1.5 0 0 0 1.5-1.2L20 6"/><path d="M9 10v5M15 10v5"/></svg>`,
+/* ---------- أيقونات الشاشة الافتتاحية (طعام) ---------- */
+const FOOD_ICONS = [
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11c0-3.5 3.6-6 8-6s8 2.5 8 6H4Z"/><path d="M3 14.5h18"/><path d="M5 17.5h14v.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-.5Z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3C8 3 4.5 4.5 2.5 7L12 21 21.5 7C19.5 4.5 16 3 12 3Z"/><circle cx="10" cy="9" r="1.2"/><circle cx="14" cy="11" r="1.2"/><circle cx="12" cy="15" r="1"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5V8Z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3v2M11 3v2M14 3v2"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 2 2v9"/><path d="M10 3v7a2 2 0 0 1-2 2"/><path d="M17 3c-2 1.5-3 4-3 7h3v11"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11a5 5 0 0 1 10 0"/><path d="M6.5 11h11L12 21 6.5 11Z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>'
 ];
-function buildSplashIcons(){
-  const wrap = document.getElementById('splashIcons');
-  const count = 16;
-  for(let i=0;i<count;i++){
-    const el = document.createElement('span');
-    el.className='float-icon';
-    el.innerHTML = SPLASH_ICONS[i % SPLASH_ICONS.length];
-    const size = 22 + Math.random()*20;
-    const left = Math.random()*94 + 2;
-    const dur = 6 + Math.random()*5;
-    const delay = Math.random()*6;
-    el.style.left = left+'%';
-    el.style.width = size+'px';
-    el.style.height = size+'px';
-    el.style.opacity = (0.55 + Math.random()*0.35).toFixed(2);
-    el.style.animationDuration = dur+'s';
-    el.style.animationDelay = delay+'s';
-    wrap.appendChild(el);
-  }
-}
-buildSplashIcons();
 
-function hideSplash(){
-  const splash = document.getElementById('splash');
-  if(splash.classList.contains('hide')) return;
-  splash.classList.add('hide');
+function buildSplashIcons() {
+    const wrap = document.getElementById('splashIcons');
+    for (let i = 0; i < 18; i++) {
+        const el = document.createElement('div');
+        el.className = 'float-icon';
+        const size = 26 + Math.random() * 34;
+        el.style.width = el.style.height = size + 'px';
+        el.style.left = (Math.random() * 94) + '%';
+        el.style.animationDuration = (9 + Math.random() * 9) + 's';
+        el.style.animationDelay = (-Math.random() * 14) + 's';
+        el.innerHTML = FOOD_ICONS[i % FOOD_ICONS.length];
+        wrap.appendChild(el);
+    }
 }
-document.getElementById('enterBtn').addEventListener('click', hideSplash);
-setTimeout(hideSplash, 3800);
 
+/* ---------- فيديو الشاشة الافتتاحية بخلفية شفافة ----------
+   الفيديو بلا قناة شفافية، فيُعرض عبر WebGL مع حذف لونه التركوازي لحظياً ليظهر الإطار الزجاجي من خلفه.
+   لضمان عدم اختفاء اللوجو نهائياً: ننتهي دائماً بصورة اللوجو الثابتة (بنفس مقاس آخر إطار) بدل الاعتماد
+   على لوحة WebGL، وننتقل إليها فوراً إذا فشل أي شيء (منع التشغيل التلقائي، فقد سياق WebGL، تأخر الفيديو). */
+function initIntroVideo() {
+    const video = document.getElementById('splashVideo');
+    const canvas = document.getElementById('splashCanvas');
+    const card = document.getElementById('splashCard');
+    if (!video || !canvas || !card) return null;
+
+    let stopped = false;
+    const showStatic = () => {                 // يعرض الصورة الثابتة ويوقف الرسم والفيديو
+        stopped = true;
+        card.classList.add('static-logo');
+        video.pause();
+    };
+
+    let gl = null;
+    try { gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, preserveDrawingBuffer: true }); } catch (e) {}
+    if (!gl) { showStatic(); return { stop() {} }; }
+    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showStatic(); });
+
+    const compile = (type, src) => {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src); gl.compileShader(sh);
+        return gl.getShaderParameter(sh, gl.COMPILE_STATUS) ? sh : null;
+    };
+    const vs = compile(gl.VERTEX_SHADER,
+        'attribute vec2 p; varying vec2 uv;' +
+        'void main(){ uv = vec2(p.x*0.5+0.5, 0.5-p.y*0.5); gl_Position = vec4(p,0.0,1.0); }');
+    const fs = compile(gl.FRAGMENT_SHADER,
+        'precision mediump float; uniform sampler2D tex; varying vec2 uv;' +
+        'const vec3 BG = vec3(33.0,204.0,208.0)/255.0;' +            // لون خلفية الفيديو
+        'void main(){' +
+        '  vec3 c = texture2D(tex, uv).rgb;' +
+        '  float a = clamp((distance(c, BG) - 0.035) / 0.80, 0.0, 1.0);' +
+        '  vec3 f = a > 0.001 ? clamp((c - (1.0 - a) * BG) / a, 0.0, 1.0) : vec3(0.0);' +
+        '  gl_FragColor = vec4(f * a, a);' +                          // ألوان مضروبة مسبقاً بالشفافية
+        '}');
+    const prog = gl.createProgram();
+    if (!vs || !fs) { showStatic(); return { stop() {} }; }
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { showStatic(); return { stop() {} }; }
+    gl.useProgram(prog);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    const draw = () => {
+        if (video.readyState < 2) return;
+        try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video); }
+        catch (e) { showStatic(); return; }
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+    let finished = false;
+    const canvasBlank = () => {                                   // هل الصف الأوسط من اللوحة فارغ؟
+        if (gl.isContextLost()) return true;
+        const row = new Uint8Array(canvas.width * 4);
+        gl.readPixels(0, canvas.height >> 1, canvas.width, 1, gl.RGBA, gl.UNSIGNED_BYTE, row);
+        for (let i = 3; i < row.length; i += 4) if (row[i] > 200) return false;
+        return true;
+    };
+    const next = (fn) => (video.requestVideoFrameCallback ? video.requestVideoFrameCallback(fn) : requestAnimationFrame(fn));
+    const loop = () => { if (!stopped) { draw(); next(loop); } };
+
+    let began = false;
+    const begin = () => { if (!began && !stopped) { began = true; next(loop); } };
+    video.addEventListener('playing', begin);
+    video.addEventListener('ended', () => { draw(); finished = true; card.classList.add('logo-done'); });   // النهاية: يبقى آخر إطار من الفيديو معروضاً
+    // عند العودة للتطبيق: إن فُرغت لوحة الرسم بصمت نعرض الصورة الثابتة (مأخوذة من آخر إطار فلا يتغير شيء)
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && finished && !stopped && canvasBlank()) showStatic(); });
+    video.addEventListener('error', showStatic);
+    if (!video.paused && video.readyState >= 3) begin();       // بدأ التشغيل التلقائي قبل تسجيل المستمعين
+
+    video.muted = true;                                          // مطلوب ليعمل التشغيل التلقائي
+    const p = video.play();
+    if (p && p.catch) p.catch(showStatic);                       // التشغيل التلقائي ممنوع (مثلاً توفير الطاقة)
+    setTimeout(() => { if (!began) showStatic(); }, 2000);       // لم يبدأ الفيديو خلال ثانيتين
+    setTimeout(() => { if (!stopped) showStatic(); }, 9000);     // شبكة أمان إن تجمّد الفيديو قبل نهايته
+
+    return { stop() { stopped = true; video.pause(); } };
+}
+
+/* ---------- تسجيل الدخول ----------
+   ملاحظة: الموقع ثابت (GitHub Pages) فالتحقق يتم داخل المتصفح. كلمات المرور محفوظة كبصمة SHA-256 وليست نصاً صريحاً،
+   لكن هذا يمنع الدخول العابر فقط ولا يعتبر حماية حقيقية للبيانات. */
+const USERS = [
+    {"id": "admin", "names": ["admin"], "hash": "93dbdae2e2db0932575220b3ac8d594f2bc0f913d055129c50f97d69f060737f"},
+];
+
+const SESSION_KEY = 'hw-user';
+let currentUser = null;          // null = لا أحد، وغير ذلك سجل المستخدم من USERS
+
+function normUser(v) { return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+/* SHA-256 (تعمل حتى إن لم يتوفر crypto.subtle) */
+function sha256(str) {
+    const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    const bytes = Array.from(new TextEncoder().encode(str));
+    const bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    for (let i = 7; i >= 0; i--) bytes.push(i >= 4 ? 0 : (bitLen >>> (i * 8)) & 255);
+    let h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let o = 0; o < bytes.length; o += 64) {
+        const w = new Array(64);
+        for (let i = 0; i < 16; i++) w[i] = (bytes[o+i*4]<<24)|(bytes[o+i*4+1]<<16)|(bytes[o+i*4+2]<<8)|bytes[o+i*4+3];
+        for (let i = 16; i < 64; i++) {
+            const s0 = rotr(w[i-15],7) ^ rotr(w[i-15],18) ^ (w[i-15]>>>3);
+            const s1 = rotr(w[i-2],17) ^ rotr(w[i-2],19) ^ (w[i-2]>>>10);
+            w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0;
+        }
+        let [a,b,c,d,e,f,g,hh] = h;
+        for (let i = 0; i < 64; i++) {
+            const t1 = (hh + (rotr(e,6)^rotr(e,11)^rotr(e,25)) + ((e&f)^(~e&g)) + K[i] + w[i]) | 0;
+            const t2 = ((rotr(a,2)^rotr(a,13)^rotr(a,22)) + ((a&b)^(a&c)^(b&c))) | 0;
+            hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+        }
+        h = [h[0]+a|0,h[1]+b|0,h[2]+c|0,h[3]+d|0,h[4]+e|0,h[5]+f|0,h[6]+g|0,h[7]+hh|0];
+    }
+    return h.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+function findUserByName(name) {
+    const n = normUser(name);
+    return n ? USERS.find(u => u.names.includes(n)) || null : null;
+}
+
+function readSession() {
+    let id = null;
+    try { id = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY); } catch (e) {}
+    return USERS.find(u => u.id === id) || null;
+}
+function saveSession(user, remember) {
+    try {
+        localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
+        (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, user.id);
+    } catch (e) {}
+}
+function clearSession() {
+    try { localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+}
+
+/* تطبيق المستخدم على الواجهة: التطبيق مخفي ومعطّل قبل تسجيل الدخول */
+function applyUser(user) {
+    currentUser = user;
+    document.getElementById('logoutBtn').style.display = user ? 'flex' : 'none';
+    document.body.classList.toggle('authed', !!user);
+    document.getElementById('appShell').inert = !user;
+    renderAll();
+}
+
+/* الإطار الزجاجي يكبر ليظهر نموذج الدخول، وزر الرجوع يعيد الشاشة الافتتاحية كما كانت */
+let introCtl = null;
+function setLoginFocusable(on) {
+    document.querySelectorAll('#loginPanel input, #loginPanel button, #loginBack').forEach(el => el.tabIndex = on ? 0 : -1);
+    document.getElementById('loginPanel').setAttribute('aria-hidden', on ? 'false' : 'true');
+}
+function openLogin() {
+    document.getElementById('splash').classList.add('login-mode');
+    setLoginFocusable(true);
+    if (window.matchMedia('(hover:hover)').matches) setTimeout(() => document.getElementById('loginUser').focus(), 650);
+}
+function closeLogin() {
+    document.getElementById('splash').classList.remove('login-mode');
+    setLoginFocusable(false);
+    document.getElementById('loginError').textContent = '';
+    ['loginUserField', 'loginPassField'].forEach(id => document.getElementById(id).classList.remove('invalid'));
+    document.getElementById('loginPass').value = '';
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+function finishLogin() {
+    document.getElementById('splash').classList.add('hide');
+    if (introCtl) setTimeout(introCtl.stop, 800);
+}
+
+async function submitLogin(ev) {
+    ev.preventDefault();
+    const err = document.getElementById('loginError');
+    const nameEl = document.getElementById('loginUser');
+    const passEl = document.getElementById('loginPass');
+    const btn = document.getElementById('loginBtn');
+    err.textContent = '';
+    ['loginUserField', 'loginPassField'].forEach(id => document.getElementById(id).classList.remove('invalid'));
+
+    if (!nameEl.value.trim()) { document.getElementById('loginUserField').classList.add('invalid'); err.textContent = 'الرجاء إدخال اسم المستخدم'; return; }
+    if (!passEl.value) { document.getElementById('loginPassField').classList.add('invalid'); err.textContent = 'الرجاء إدخال كلمة المرور'; return; }
+
+    btn.classList.add('loading');
+    await new Promise(r => setTimeout(r, 350));
+    const user = findUserByName(nameEl.value);
+    const ok = user && sha256(`HIGHWAY|${user.id}|${passEl.value}`) === user.hash;
+    btn.classList.remove('loading');
+
+    if (!ok) {
+        document.getElementById('loginUserField').classList.add('invalid');
+        document.getElementById('loginPassField').classList.add('invalid');
+        err.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        passEl.value = '';
+        return;
+    }
+    saveSession(user, document.getElementById('loginRemember').checked);
+    passEl.value = '';
+    applyUser(user);
+    resetAndGo('screen-dashboard');
+    finishLogin();
+}
+
+function togglePass() {
+    const p = document.getElementById('loginPass');
+    const show = p.type === 'password';
+    p.type = show ? 'text' : 'password';
+    document.getElementById('passToggle').setAttribute('aria-label', show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+    document.getElementById('passToggle').classList.toggle('on', show);
+}
+
+function logout() {
+    clearSession();
+    location.reload();
+}
+
+/* ---------- التنقل ---------- */
 function goTo(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-
+  currentScreen = id;
   const meta = SCREEN_META[id] || {};
-  const backBtn = document.getElementById('headerBack');
-  backBtn.classList.toggle('show', !!meta.back);
-  backBtn.onclick = () => { if(meta.back) goTo(meta.back); };
+  document.getElementById('headerBack').classList.toggle('show', !!meta.back);
+  document.getElementById('topTitle').textContent = meta.title || '';
+  document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === meta.tab));
+  window.scrollTo({ top:0, behavior:'auto' });
+  // كل صفحة تُفتح "نظيفة" كأنها حُمّلت من جديد
+  if (id === 'screen-confirm') { document.getElementById('confirmForm').reset(); clearInvalid('confirmForm'); }
+  renderAll();
+}
 
-  window.scrollTo({top:0, behavior:'instant'});
+function goBack(){
+  const back = (SCREEN_META[currentScreen] || {}).back;
+  if (back) goTo(back);
+}
+
+/* الضغط على اللوجو: إعادة تحميل الموقع (بدون إعادة شاشة الدخول) */
+function reloadSite(){
+  try { sessionStorage.setItem('hw-skip-splash', '1'); } catch (e) {}
+  location.reload();
 }
 
 function resetAndGo(id){
@@ -98,7 +339,7 @@ function resetAndGo(id){
   document.getElementById('confirmForm').reset();
   clearInvalid('orderForm');
   clearInvalid('confirmForm');
-  state.pickup = {name:"", isCustom:false};
+  state.pickup = { name:"", isCustom:false };
   document.getElementById('successRef').style.display = 'none';
   goTo(id);
 }
@@ -106,116 +347,108 @@ function resetAndGo(id){
 function renderRestaurants(){
   const grid = document.getElementById('restGrid');
   grid.innerHTML = '';
-  RESTAURANTS.forEach(r=>{
+  RESTAURANTS.forEach(r => {
     const btn = document.createElement('button');
-    btn.type='button';
-    btn.className='rest-card glass';
+    btn.type = 'button';
+    btn.className = 'rest-card glass';
     btn.innerHTML = `<span class="ico">${r.icon}</span><span>${r.name}</span>`;
-    btn.addEventListener('click', ()=>selectPickup(r.name, false));
+    btn.addEventListener('click', () => selectPickup(r.name, false));
     grid.appendChild(btn);
   });
   const custom = document.createElement('button');
-  custom.type='button';
-  custom.className='rest-card custom';
+  custom.type = 'button';
+  custom.className = 'rest-card custom';
   custom.innerHTML = `<span class="ico">${ICONS.pin}</span><span>نقطة استلام أخرى</span>`;
-  custom.addEventListener('click', ()=>selectPickup("", true));
+  custom.addEventListener('click', () => selectPickup("", true));
   grid.appendChild(custom);
 }
-renderRestaurants();
 
 function selectPickup(name, isCustom){
-  state.pickup = {name, isCustom};
+  state.pickup = { name, isCustom };
   document.getElementById('orderForm').reset();
   clearInvalid('orderForm');
 
-  const pill = document.getElementById('pickupPillText');
   const customField = document.getElementById('customNameField');
-  const customInput = document.getElementById('customName');
-
-  if(isCustom){
-    pill.textContent = 'نقطة استلام أخرى';
-    customField.style.display = 'block';
-    customInput.value = '';
-  }else{
-    pill.textContent = name;
-    customField.style.display = 'none';
-  }
+  document.getElementById('pickupPillText').textContent = isCustom ? 'نقطة استلام أخرى' : name;
+  customField.style.display = isCustom ? 'block' : 'none';
+  if (isCustom) document.getElementById('customName').value = '';
 
   goTo('screen-order');
 }
 
+/* ---------- أدوات ---------- */
 function pad2(n){ return String(n).padStart(2,'0'); }
 
 function getDatePrefix(){
   const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
-  const mm = pad2(d.getMonth()+1);
-  const dd = pad2(d.getDate());
-  return `${yy}${mm}${dd}`;
+  return `${String(d.getFullYear()).slice(-2)}${pad2(d.getMonth()+1)}${pad2(d.getDate())}`;
 }
 
 function setInvalid(fieldId, invalid){
   document.getElementById(fieldId).classList.toggle('invalid', invalid);
 }
 function clearInvalid(formId){
-  document.getElementById(formId).querySelectorAll('.field').forEach(f=>f.classList.remove('invalid'));
+  document.getElementById(formId).querySelectorAll('.field').forEach(f => f.classList.remove('invalid'));
 }
 
 function formatTime12h(timeStr){
-  if(!timeStr) return '';
-  const [h,m] = timeStr.split(':').map(Number);
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':').map(Number);
   const period = h < 12 ? 'ص' : 'م';
-  let h12 = h % 12; if(h12===0) h12 = 12;
+  const h12 = h % 12 || 12;
   return `${pad2(h12)}:${pad2(m)} ${period}`;
 }
 
+/* رقم الهاتف اختياري: إن كُتب يجب أن يكون أرقاماً (7–15) ويقبل + في البداية */
+function parsePhone(raw){
+  const v = String(raw || '').trim();
+  if (!v) return { empty:true, ok:true, value:'' };
+  const clean = v.replace(/[\s\-()]/g, '');
+  return { empty:false, ok:/^\+?\d{7,15}$/.test(clean), value:clean };
+}
+
 function openWhatsApp(message){
-  const url = 'https://wa.me/?text=' + encodeURIComponent(message);
-  window.open(url, '_blank');
+  window.open('https://wa.me/?text=' + encodeURIComponent(message), '_blank');
 }
 
 function setBtnLoading(btn, isLoading){
   btn.classList.toggle('loading', isLoading);
 }
 
-document.getElementById('orderPrefixTag').textContent = `ORD#${getDatePrefix()}-`;
-
+/* ---------- نموذج تحضير الطلب ---------- */
 document.getElementById('orderForm').addEventListener('submit', function(e){
   e.preventDefault();
   let valid = true;
 
   let pickupName = state.pickup.name;
-  if(state.pickup.isCustom){
+  if (state.pickup.isCustom){
     const customVal = document.getElementById('customName').value.trim();
     setInvalid('customNameField', !customVal);
-    if(!customVal) valid = false;
+    if (!customVal) valid = false;
     pickupName = customVal;
   }
 
   const orderNumber = document.getElementById('orderNumber').value.trim();
   setInvalid('orderNumField', !orderNumber);
-  if(!orderNumber) valid = false;
+  if (!orderNumber) valid = false;
 
-  const orderValueRaw = document.getElementById('orderValue').value.trim();
-  const orderValueOk = orderValueRaw !== '';
-  setInvalid('orderValueField', !orderValueOk);
-  if(!orderValueOk) valid = false;
+  const orderValue = document.getElementById('orderValue').value.trim();
+  setInvalid('orderValueField', !orderValue);
+  if (!orderValue) valid = false;
 
-  if(!valid) return;
+  if (!valid) return;
 
   const btn = document.getElementById('orderSubmitBtn');
   setBtnLoading(btn, true);
 
-  setTimeout(()=>{
+  setTimeout(() => {
     const notes = document.getElementById('orderNotes').value.trim() || 'لا يوجد';
-    const valueFormatted = orderValueRaw;
 
     const message =
 `*📢 طلب جديد متاح | رقم #${orderNumber}*
 *🏪 نقطة الاستلام*: ${pickupName}
-*💵 مطلوب دفعه*: ${valueFormatted} د.أ
-*📝 ملاحظات*:
- ${notes}
+*💵 مطلوب دفعه*: ${orderValue} د.أ
+*📝 ملاحظات*: ${notes}
 
 ———————————————
 *⚠️ تعليمات القبول:*
@@ -226,6 +459,7 @@ document.getElementById('orderForm').addEventListener('submit', function(e){
 *HIGHWAY Delivery | أسرع طريق لطلباتك 🩵.*`;
 
     openWhatsApp(message);
+    addNewOrder(orderNumber, pickupName, orderValue, notes === 'لا يوجد' ? '' : notes);
     setBtnLoading(btn, false);
 
     document.getElementById('successSub').textContent = 'تم فتح واتساب لمشاركة تفاصيل الطلب الجديد.';
@@ -236,42 +470,48 @@ document.getElementById('orderForm').addEventListener('submit', function(e){
   }, 550);
 });
 
+/* ---------- نموذج تأكيد الاستلام ---------- */
 document.getElementById('confirmForm').addEventListener('submit', function(e){
   e.preventDefault();
   let valid = true;
 
   const captainName = document.getElementById('captainName').value.trim();
   setInvalid('captainNameField', !captainName);
-  if(!captainName) valid = false;
+  if (!captainName) valid = false;
 
   const arrivalTime = document.getElementById('arrivalTime').value;
   setInvalid('arrivalTimeField', !arrivalTime);
-  if(!arrivalTime) valid = false;
+  if (!arrivalTime) valid = false;
+
+  const phone = parsePhone(document.getElementById('captainPhone').value);
+  setInvalid('captainPhoneField', !phone.ok);
+  if (!phone.ok) valid = false;
 
   const orderSuffix = document.getElementById('confirmOrderNumber').value.trim();
   setInvalid('confirmOrderNumField', !orderSuffix);
-  if(!orderSuffix) valid = false;
+  if (!orderSuffix) valid = false;
 
-  if(!valid) return;
+  if (!valid) return;
 
   const btn = document.getElementById('confirmSubmitBtn');
   setBtnLoading(btn, true);
 
-  setTimeout(()=>{
+  setTimeout(() => {
     const fullOrderNumber = `ORD#${getDatePrefix()}-${orderSuffix}`;
-    const timeFormatted = formatTime12h(arrivalTime);
+    const phoneLine = phone.empty ? '' : `\n📞 رقم الكابتن: *\u200E${phone.value}*`;
 
     const message =
 `📢 تنبيه: الكابتن في الطريق إليكم!
 
-تم إسناد الطلب للكابتن *${captainName}*
-وهو الآن في طريقه لإستلام الطلب رقم *${fullOrderNumber}*
-⏰ وقت الوصول المتوقع: *${timeFormatted}*
+تم إسناد الطلب للكابتن *${captainName}*${phoneLine}
+الآن في طريقه لإستلام الطلب رقم *${fullOrderNumber}*
+⏰ وقت الوصول المتوقع: *${formatTime12h(arrivalTime)}*
 
 شكراً لكم على سرعة التجاوب واحترافيتكم العالية 🩵
 HIGHWAY Delivery | The Fastest Way to Your Orders`;
 
     openWhatsApp(message);
+    assignOrder(orderSuffix, captainName, phone.empty ? '' : phone.value, arrivalTime);
     setBtnLoading(btn, false);
 
     document.getElementById('successSub').textContent = 'تم فتح واتساب لتأكيد استلام الطلب مع الكابتن.';
@@ -282,4 +522,189 @@ HIGHWAY Delivery | The Fastest Way to Your Orders`;
   }, 550);
 });
 
-goTo('screen-dashboard');
+/* ---------- سجل الطلبات (محفوظ على هذا الجهاز) ---------- */
+const ORDERS_KEY = 'hw-coord-orders';
+const MIN = 60000;
+let query = '', filter = 'all';
+const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const isToday = (ts) => new Date(ts).toDateString() === new Date().toDateString();
+
+function loadOrders(){
+  try { const a = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); return Array.isArray(a) ? a : []; }
+  catch (e) { return []; }
+}
+function saveOrders(list){
+  try { localStorage.setItem(ORDERS_KEY, JSON.stringify(list.slice(0, 500))); } catch (e) {}
+}
+function findOpen(list, num){ return list.find(o => o.num === num && o.status === 'new'); }
+
+function addNewOrder(num, pickup, value, notes){
+  const list = loadOrders();
+  list.unshift({ id:`ORD#${getDatePrefix()}-${num}`, num, pickup, value, notes, status:'new', ts:Date.now() });
+  saveOrders(list); renderAll();
+}
+function assignOrder(num, name, phone, eta){
+  const list = loadOrders();
+  let o = findOpen(list, num);
+  if (!o){                                   // طلب لم يُجهَّز من هذه اللوحة: نسجله مباشرة كمُسند
+    o = { id:`ORD#${getDatePrefix()}-${num}`, num, pickup:'—', value:'', notes:'', ts:Date.now() };
+    list.unshift(o);
+  }
+  Object.assign(o, { status:'assigned', captain:{ name, phone, eta }, assignedTs:Date.now() });
+  saveOrders(list); renderAll();
+}
+function setStatus(id, status){
+  const list = loadOrders(), o = list.find(x => x.id === id);
+  if (!o) return;
+  if (status === 'cancel' && !confirm('إلغاء هذا الطلب؟')) return;
+  o.status = status; o.endTs = Date.now();
+  saveOrders(list); renderAll();
+}
+function openAssign(id){
+  const o = loadOrders().find(x => x.id === id);
+  resetAndGo('screen-confirm');
+  if (o) document.getElementById('confirmOrderNumber').value = o.num;
+  document.getElementById('captainName').focus();
+}
+function setQuery(v){ query = v.trim().toLowerCase(); renderAll(); }
+function setFilter(f){ filter = f; renderAll(); }
+
+function mins(ts){ return Math.max(0, Math.round((Date.now() - ts) / MIN)); }
+function ago(ts){
+  const m = mins(ts);
+  if (m < 1) return 'الآن';
+  if (m < 60) return `منذ ${m} د`;
+  if (m < 1440) return `منذ ${Math.floor(m / 60)} س`;
+  return new Date(ts).toLocaleDateString('ar-JO', { day:'numeric', month:'short' });
+}
+const STATUS_LABEL = { new:'بانتظار كابتن', assigned:'قيد التوصيل', done:'مكتمل', cancel:'ملغي' };
+const matches = (o) => !query || [o.id, o.num, o.pickup, o.captain && o.captain.name, o.captain && o.captain.phone].join(' ').toLowerCase().includes(query);
+
+function actionsFor(o){
+  if (o.status === 'new')      return `<div class="acts"><button type="button" class="b-pri" onclick="openAssign('${esc(o.id)}')">إسناد كابتن</button><button type="button" class="b-no" onclick="setStatus('${esc(o.id)}','cancel')">إلغاء</button></div>`;
+  if (o.status === 'assigned') return `<div class="acts"><button type="button" class="b-ok" onclick="setStatus('${esc(o.id)}','done')">تم التسليم</button><button type="button" class="b-no" onclick="setStatus('${esc(o.id)}','cancel')">إلغاء</button></div>`;
+  return '';
+}
+function card(o){
+  const wait = mins(o.ts);
+  const cls = o.status === 'new' ? (wait >= 10 ? ' crit' : wait >= 5 ? ' late' : '') : '';
+  const cap = o.captain ? `<br>الكابتن: <b>${esc(o.captain.name)}</b>${o.captain.eta ? ` · الوصول <b>${esc(formatTime12h(o.captain.eta))}</b>` : ''}` : '';
+  const val = o.value ? `المبلغ: <b>${esc(o.value)} د.أ</b>` : '';
+  return `<article class="oc s-${o.status}${cls}"><div class="oc-top"><b>${esc(o.id)}</b><span class="age">${ago(o.status === 'assigned' ? o.assignedTs : (o.endTs || o.ts))}</span></div>` +
+    `<div class="oc-pick">${esc(o.pickup)}</div><div class="oc-meta">${val}${cap}</div>${actionsFor(o)}</article>`;
+}
+function fill(id, list, empty){
+  document.getElementById(id).innerHTML = list.length ? list.map(card).join('') : `<div class="col-empty">${empty}</div>`;
+}
+
+function renderDashboard(){
+  const all = loadOrders(), today = all.filter(o => isToday(o.ts) || o.status === 'new' || o.status === 'assigned');
+  const nw = all.filter(o => o.status === 'new'), go = all.filter(o => o.status === 'assigned');
+  const done = all.filter(o => o.status === 'done' && isToday(o.endTs || o.ts));
+  const assigned = all.filter(o => o.assignedTs && isToday(o.assignedTs));
+  document.getElementById('kToday').textContent = all.filter(o => isToday(o.ts)).length;
+  document.getElementById('kWait').textContent = nw.length;
+  document.getElementById('kGo').textContent = go.length;
+  document.getElementById('kDone').textContent = done.length;
+  document.getElementById('kAssign').innerHTML = assigned.length
+    ? Math.round(assigned.reduce((t, o) => t + (o.assignedTs - o.ts), 0) / assigned.length / MIN) + '<span style="font-size:13px"> د</span>' : '—';
+  fill('colNew',  nw.filter(matches),   'لا توجد طلبات بانتظار كابتن');
+  fill('colGo',   go.filter(matches),   'لا توجد طلبات قيد التوصيل');
+  fill('colDone', done.filter(matches), 'لم يكتمل أي طلب اليوم');
+  document.getElementById('cNew').textContent = nw.length;
+  document.getElementById('cGo').textContent = go.length;
+  document.getElementById('cDone').textContent = done.length;
+
+  const bars = [], now = new Date();
+  for (let i = 11; i >= 0; i--){
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() - i).getTime();
+    bars.push({ h:new Date(start).getHours(), n:all.filter(o => o.ts >= start && o.ts < start + 60 * MIN).length, now:i === 0 });
+  }
+  const max = Math.max(1, ...bars.map(b => b.n));
+  document.getElementById('bars').innerHTML = bars.map(b =>
+    `<div class="${b.now ? 'now' : ''}"><em>${b.n || ''}</em><i style="height:${Math.round(b.n / max * 78)}px"></i><small>${b.h}</small></div>`).join('');
+
+  const ev = [];
+  all.forEach(o => {
+    ev.push({ t:o.ts, c:'warn', x:`طلب جديد <b>${esc(o.id)}</b> من ${esc(o.pickup)}` });
+    if (o.assignedTs) ev.push({ t:o.assignedTs, c:'go', x:`إسناد <b>${esc(o.id)}</b> للكابتن ${esc(o.captain.name)}` });
+    if (o.status === 'done') ev.push({ t:o.endTs, c:'ok', x:`تم تسليم <b>${esc(o.id)}</b>` });
+    if (o.status === 'cancel') ev.push({ t:o.endTs, c:'', x:`إلغاء <b>${esc(o.id)}</b>` });
+  });
+  ev.sort((a, b) => b.t - a.t);
+  document.getElementById('feed').innerHTML = ev.length
+    ? ev.slice(0, 8).map(e => `<li><i class="dot ${e.c}"></i><span>${e.x}<small>${ago(e.t)}</small></span></li>`).join('')
+    : '<li class="none">لا يوجد نشاط بعد. ابدأ بتحضير طلب جديد.</li>';
+}
+
+function renderOrders(){
+  const list = loadOrders().filter(o => (filter === 'all' || o.status === filter) && matches(o));
+  document.querySelectorAll('#chips button').forEach(b => b.classList.toggle('on', b.dataset.f === filter));
+  const head = '<div class="t-head"><span>رقم الطلب</span><span>نقطة الاستلام</span><span>المبلغ</span><span>الكابتن</span><span>الحالة</span><span>الوقت</span><span></span></div>';
+  document.getElementById('ordersTable').innerHTML = list.length ? head + list.map(o =>
+    `<div class="t-row"><b class="c-id">${esc(o.id)}</b><span class="c-pick">${esc(o.pickup)}</span><span class="c-val">${o.value ? esc(o.value) + ' د.أ' : '—'}</span>` +
+    `<span class="c-cap">${o.captain ? esc(o.captain.name) : '—'}</span><span class="pill ${o.status}">${STATUS_LABEL[o.status]}</span><span class="c-time">${ago(o.ts)}</span>${actionsFor(o) || '<div></div>'}</div>`).join('')
+    : '<div class="empty-box">لا توجد طلبات مطابقة</div>';
+}
+
+function renderCaptains(){
+  const map = new Map();
+  loadOrders().forEach(o => {
+    if (!o.captain) return;
+    const k = o.captain.name.trim();
+    const c = map.get(k) || { name:k, phone:'', total:0, today:0, active:0, last:0 };
+    if (o.captain.phone) c.phone = o.captain.phone;
+    c.total++; if (isToday(o.assignedTs)) c.today++; if (o.status === 'assigned') c.active++;
+    c.last = Math.max(c.last, o.assignedTs || 0);
+    map.set(k, c);
+  });
+  const list = [...map.values()].filter(c => !query || (c.name + c.phone).toLowerCase().includes(query)).sort((a, b) => b.last - a.last);
+  document.getElementById('capGrid').innerHTML = list.length ? list.map(c =>
+    `<div class="cap"><span class="cap-av">${esc(c.name.charAt(0))}</span><div class="cap-tx"><b>${esc(c.name)}</b><small>${esc(c.phone) || 'بدون رقم'}</small></div>` +
+    `<div class="cap-st"><b>${c.today}</b>اليوم</div><div class="cap-st"><b>${c.active}</b>نشط</div></div>`).join('')
+    : '<div class="empty-box" style="grid-column:1/-1">لا يوجد كباتن بعد. يظهرون هنا عند إسناد أول طلب.</div>';
+}
+
+function renderAll(){
+  if (!currentUser) return;
+  document.querySelectorAll('[data-q]').forEach(i => { if (i !== document.activeElement) i.value = query; });
+  const n = loadOrders().filter(o => o.status === 'new').length, badge = document.getElementById('navBadge');
+  badge.hidden = !n; badge.textContent = n;
+  if (currentScreen === 'screen-dashboard') renderDashboard();
+  else if (currentScreen === 'screen-orders') renderOrders();
+  else if (currentScreen === 'screen-captains') renderCaptains();
+}
+
+/* ---------- تشغيل ---------- */
+(function init(){
+  buildSplashIcons();
+  renderRestaurants();
+  document.getElementById('orderPrefixTag').textContent = `ORD#${getDatePrefix()}-`;
+
+  let skipSplash = false;
+  try { skipSplash = sessionStorage.getItem('hw-skip-splash') === '1'; sessionStorage.removeItem('hw-skip-splash'); } catch (e) {}
+
+  const saved = readSession();
+  applyUser(saved);
+  if (!saved) skipSplash = false;          // بدون مستخدم لا نتخطى الشاشة الافتتاحية (فهي تحمل تسجيل الدخول)
+  const splash = document.getElementById('splash');
+  if (skipSplash) { splash.style.transition = 'none'; splash.classList.add('hide'); }
+
+  introCtl = skipSplash ? null : initIntroVideo();
+  document.getElementById('loginForm').addEventListener('submit', submitLogin);
+  document.getElementById('enterBtn').addEventListener('click', () => {
+    if (saved) finishLogin();              // مستخدم محفوظ: يدخل مباشرة
+    else openLogin();                      // غيره: الإطار الزجاجي يكبر لتسجيل الدخول
+  });
+
+  // صفحة مستعادة من ذاكرة المتصفح، أو دخول/خروج من تبويب آخر: نعيد التحميل كي لا تظهر حالة قديمة
+  window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
+  window.addEventListener('storage', (e) => { if (e.key === SESSION_KEY) location.reload(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && splash.classList.contains('login-mode') && !splash.classList.contains('hide')) closeLogin();
+  });
+
+  document.getElementById('topDate').textContent = new Date().toLocaleDateString('ar-JO', { weekday:'long', day:'numeric', month:'long' });
+  setInterval(() => { if (!document.hidden) renderAll(); }, 30000);
+  goTo('screen-dashboard');
+})();
